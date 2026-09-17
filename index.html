@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Elektromagnetischer Schwingkreis</title>
+<style>
+  :root{
+    --akzent:#1F4E79;
+    --el:#1F4E79;
+    --magn:#A34700;
+    --th:#8C8C8C;
+    --linie:#B4B4B4;
+    --text:#1A1A1A;
+    --grau:#5B5B5B;
+    --flaeche:#F5F5F3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Calibri,"Segoe UI",Candara,sans-serif;
+    font-size:16px; line-height:1.45; color:var(--text);
+    margin:0; padding:18px 20px 40px; background:#fff;
+  }
+  header{border-bottom:1.5px solid var(--akzent); padding-bottom:8px; margin-bottom:16px;}
+  h1{font-size:22px; margin:0 0 2px; font-weight:700; color:var(--akzent);}
+  .kopf{font-size:14px; color:var(--grau);}
+  h2{font-size:17px; margin:0 0 8px; font-weight:700;}
+
+  .buehne{display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start;}
+  @media (max-width:820px){ .buehne{grid-template-columns:1fr;} }
+  .feld{border:1px solid var(--linie); padding:12px 14px 14px;}
+  canvas{width:100%; height:auto; display:block;}
+  .bildtext{font-size:13px; color:var(--grau); margin-top:6px;}
+
+  .energie{border:1px solid var(--linie); padding:12px 14px 14px; margin-top:16px;}
+  .riegel{display:flex; height:38px; border:1px solid var(--linie); background:var(--flaeche); overflow:hidden;}
+  .riegel div{height:100%;}
+  .marken{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:6px 24px; margin-top:10px; font-size:15px;}
+  .marke{display:flex; gap:8px; align-items:flex-start;}
+  .klecks{width:13px; height:13px; flex:0 0 13px; margin-top:5px;}
+  .marke b{font-variant-numeric:tabular-nums;}
+  .marke small{color:var(--grau); display:block; font-size:13px;}
+
+  .phase{margin-top:14px; padding:10px 12px; background:var(--flaeche); border-left:3px solid var(--akzent);
+         font-size:17px; line-height:1.5; min-height:82px;}
+
+  .pult{border:1px solid var(--linie); padding:12px 14px 14px; margin-top:16px;}
+  .reihe{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px;}
+  .reihe:last-child{margin-bottom:0;}
+  .etikett{font-size:14px; color:var(--grau); margin-right:2px;}
+  button{
+    font-family:inherit; font-size:17px; padding:11px 18px; cursor:pointer;
+    min-height:46px; touch-action:manipulation;
+    background:#fff; color:var(--akzent); border:1px solid var(--akzent);
+  }
+  @media (hover:hover){ button:hover{background:var(--flaeche);} }
+  button:active{background:var(--akzent); color:#fff;}
+  button.an{background:var(--akzent); color:#fff;}
+  button:focus-visible, input:focus-visible{outline:2px solid var(--akzent); outline-offset:2px;}
+  .haupt{font-weight:700; min-width:132px;}
+  .pult{position:sticky; bottom:0; background:#fff; z-index:5;}
+  .schalter{display:flex; align-items:center; gap:10px; font-size:17px; padding:8px 4px; touch-action:manipulation;}
+  .schalter input[type=checkbox]{width:26px; height:26px; accent-color:var(--akzent);}
+  @media (max-width:1180px){
+    .buehne{grid-template-columns:1fr;}
+    .feld canvas{max-width:620px; margin:0 auto;}
+    body{padding:14px 14px 30px;}
+    h1{font-size:24px;}
+    .phase{font-size:18px; min-height:96px;}
+    .marken{font-size:16px;}
+  }
+  @media (max-width:1180px) and (orientation:landscape){
+    .buehne{grid-template-columns:1.3fr 1fr;}
+    .feld canvas{max-width:none;}
+  }
+
+  footer{margin-top:24px; border-top:1px solid var(--linie); padding-top:8px; font-size:13px; color:var(--grau);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Elektromagnetischer Schwingkreis</h1>
+  <div class="kopf">Physik Grundkurs Jahrgangsstufe 12 &nbsp;|&nbsp; LB 1: Mechanische und elektromagnetische Schwingungen und Wellen &nbsp;|&nbsp; Einsatzform: Partnerarbeit am Tablet, etwa 15 Minuten</div>
+</header>
+
+<div class="buehne">
+  <div class="feld">
+    <h2>Schwingkreis</h2>
+    <canvas id="cSchaltung" width="760" height="620"></canvas>
+    <div class="bildtext">Blau: Ladung und elektrisches Feld des Kondensators. Braun: Stromstärke und die Feldlinien des Magnetfeldes der Spule.</div>
+  </div>
+  <div class="feld">
+    <h2>Waagerechter Federschwinger zum Vergleich</h2>
+    <canvas id="cFeder" width="560" height="620"></canvas>
+    <div class="bildtext">Die Auslenkung y verhält sich wie die Ladung q, die Geschwindigkeit v wie die Stromstärke i. In der Gleichgewichtslage ist die Feder entspannt.</div>
+  </div>
+</div>
+
+<div class="energie">
+  <h2>Wo steckt die Energie?</h2>
+  <div class="riegel">
+    <div id="sEl" style="background:#1F4E79; width:100%"></div>
+    <div id="sMagn" style="background:#A34700; width:0%"></div>
+    <div id="sTh" style="background:#8C8C8C; width:0%"></div>
+  </div>
+  <div class="marken">
+    <div class="marke"><span class="klecks" style="background:#1F4E79"></span>
+      <span>elektrisches Feld des Kondensators <b id="wEl">100 %</b><small>entspricht der Spannenergie der Feder (potenzielle Energie)</small></span></div>
+    <div class="marke"><span class="klecks" style="background:#A34700"></span>
+      <span>magnetisches Feld der Spule <b id="wMagn">0 %</b><small>entspricht der Bewegungsenergie des Körpers</small></span></div>
+    <div class="marke"><span class="klecks" style="background:#8C8C8C"></span>
+      <span>in Wärme umgewandelt <b id="wTh">0 %</b><small>nur bei eingeschalteter Dämpfung</small></span></div>
+  </div>
+  <div class="phase" id="phasentext">Der Kondensator ist geladen. Die gesamte Energie steckt im elektrischen Feld. Wählen Sie „Start“.</div>
+</div>
+
+<div class="pult">
+  <div class="reihe">
+    <button id="bStart" class="haupt">Start</button>
+    <button id="bReset">Von vorn</button>
+    <span class="etikett" style="margin-left:14px;">Tempo</span>
+    <button class="tempo" data-z="12000">sehr langsam</button>
+    <button class="tempo an" data-z="6000">langsam</button>
+    <button class="tempo" data-z="2500">zügig</button>
+  </div>
+  <div class="reihe">
+    <span class="etikett">Zeitpunkt anspringen</span>
+    <button class="sprung" data-k="0">t = 0</button>
+    <button class="sprung" data-k="1">t = T/4</button>
+    <button class="sprung" data-k="2">t = T/2</button>
+    <button class="sprung" data-k="3">t = 3T/4</button>
+    <label class="schalter" style="margin-left:10px;">
+      <input type="checkbox" id="sDaempfung"> Dämpfung
+    </label>
+  </div>
+</div>
+
+<footer>
+  Offline lauffähige Einzeldatei für das Tablet, keine Internetverbindung erforderlich. Verteilung über LernSax.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var Z = {
+    L: 0.010, C: 10e-6, R: 0, U0: 5,
+    zeitlupe: 6000,
+    q: 0, i: 0, t: 0,
+    laeuft: false,
+    Tmess: null
+  };
+
+  var nulldurchgaenge = [];
+  var FARBE_EL = "#1F4E79", FARBE_MAGN = "#A34700", FARBE_DRAHT = "#333333", FARBE_GRAU = "#8A8A8A";
+
+  function el(id){ return document.getElementById(id); }
+  function iAnz(){ return -Z.i; }
+  function omega(){ return 1/Math.sqrt(Z.L*Z.C); }
+  function Tthomson(){ return 2*Math.PI*Math.sqrt(Z.L*Z.C); }
+  function q0(){ return Z.C*Z.U0; }
+  function iMax(){ return Z.U0*Math.sqrt(Z.C/Z.L); }
+  function E0(){ return Z.C*Z.U0*Z.U0/2; }
+
+  function setzePhase(k){
+    var w = k*Math.PI/2;
+    Z.q = q0()*Math.cos(w);
+    Z.i = -q0()*omega()*Math.sin(w);
+    Z.t = k*Tthomson()/4;
+    nulldurchgaenge = []; Z.Tmess = null;
+  }
+  function vonVorn(){ setzePhase(0); Z.t = 0; }
+
+  function ableitung(q, i){ return { dq: i, di: (-q/Z.C - Z.R*i)/Z.L }; }
+  function schritt(h){
+    var a = ableitung(Z.q, Z.i);
+    var b = ableitung(Z.q + h/2*a.dq, Z.i + h/2*a.di);
+    var c = ableitung(Z.q + h/2*b.dq, Z.i + h/2*b.di);
+    var d = ableitung(Z.q + h*c.dq,   Z.i + h*c.di);
+    Z.q += h/6*(a.dq + 2*b.dq + 2*c.dq + d.dq);
+    Z.i += h/6*(a.di + 2*b.di + 2*c.di + d.di);
+    Z.t += h;
+  }
+  function rechne(dtSim){
+    var maxH = Tthomson()/800;
+    var n = Math.max(1, Math.ceil(dtSim/maxH)), h = dtSim/n;
+    for(var k=0;k<n;k++){
+      var uVor = Z.q/Z.C;
+      schritt(h);
+      if(uVor < 0 && Z.q/Z.C >= 0){
+        nulldurchgaenge.push(Z.t);
+        if(nulldurchgaenge.length > 6) nulldurchgaenge.shift();
+        if(nulldurchgaenge.length >= 2){
+          var s = 0, m = nulldurchgaenge.length;
+          for(var j=1;j<m;j++) s += nulldurchgaenge[j]-nulldurchgaenge[j-1];
+          Z.Tmess = s/(m-1);
+        }
+      }
+    }
+  }
+
+  function linie(c,x1,y1,x2,y2,f,d){ c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.strokeStyle=f; c.lineWidth=d||3; c.stroke(); }
+  function pfeil(c,x1,y1,x2,y2,f,d,k){
+    linie(c,x1,y1,x2,y2,f,d);
+    var w = Math.atan2(y2-y1,x2-x1); k = k||10;
+    c.beginPath(); c.moveTo(x2,y2);
+    c.lineTo(x2-k*Math.cos(w-0.4), y2-k*Math.sin(w-0.4));
+    c.lineTo(x2-k*Math.cos(w+0.4), y2-k*Math.sin(w+0.4));
+    c.closePath(); c.fillStyle=f; c.fill();
+  }
+
+  function zeichneSchaltung(){
+    var c = el("cSchaltung").getContext("2d");
+    c.setTransform(2,0,0,2,0,0);
+    c.clearRect(0,0,380,310);
+    c.lineCap = "round";
+
+    var u = Z.q/Z.C, i = iAnz();
+    var uRel = Math.max(-1,Math.min(1, u/Z.U0));
+    var iRel = Math.max(-1,Math.min(1, i/iMax()));
+    var xL = 100, xR = 292, yO = 66, yU = 254;
+
+    linie(c,xL,yO,xR,yO,FARBE_DRAHT,3);
+    linie(c,xL,yU,xR,yU,FARBE_DRAHT,3);
+    linie(c,xL,yO,xL,138,FARBE_DRAHT,3);
+    linie(c,xL,182,xL,yU,FARBE_DRAHT,3);
+    linie(c,xR,yO,xR,116,FARBE_DRAHT,3);
+    linie(c,xR,204,xR,yU,FARBE_DRAHT,3);
+
+    linie(c,xL-44,138,xL+44,138,FARBE_DRAHT,5.5);
+    linie(c,xL-44,182,xL+44,182,FARBE_DRAHT,5.5);
+
+    var nQ = Math.round(Math.abs(uRel)*7);
+    c.font = "bold 18px Calibri, sans-serif"; c.textAlign="center"; c.textBaseline="middle";
+    c.fillStyle = FARBE_EL;
+    for(var k=0;k<nQ;k++){
+      var xx = nQ===1 ? xL : xL - 37 + k*(74/(nQ-1));
+      c.fillText(uRel>0?"+":"\u2212", xx, 128);
+      c.fillText(uRel>0?"\u2212":"+", xx, 192);
+    }
+    if(Math.abs(uRel)>0.03){
+      var nE = Math.max(1,Math.round(Math.abs(uRel)*5));
+      for(var e=0;e<nE;e++){
+        var xe = nE===1 ? xL : xL - 28 + e*(56/(nE-1));
+        if(uRel>0) pfeil(c,xe,142,xe,178,FARBE_EL,1.8,7);
+        else pfeil(c,xe,178,xe,142,FARBE_EL,1.8,7);
+      }
+    } else {
+      c.font="15px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU;
+      c.fillText("q = 0", xL, 160);
+    }
+
+    c.beginPath();
+    for(var s=0;s<8;s++){ var ys = 116 + s*11; c.moveTo(xR, ys); c.arc(xR, ys+5.5, 5.5, -Math.PI/2, Math.PI/2, false); }
+    c.strokeStyle=FARBE_DRAHT; c.lineWidth=3; c.stroke();
+
+    if(Math.abs(iRel)>0.03){
+      var nB = Math.max(1,Math.min(3,Math.round(Math.abs(iRel)*3)));
+      var runter = iRel > 0;
+      for(var b=0;b<nB;b++){
+        var rx = 16 + b*11, ry = 52 + b*13;
+        c.beginPath();
+        if(c.ellipse) c.ellipse(xR, 160, rx, ry, 0, 0, 2*Math.PI);
+        else { c.moveTo(xR-rx,160); c.lineTo(xR-rx,160-ry); c.lineTo(xR+rx,160-ry); c.lineTo(xR+rx,160+ry); c.lineTo(xR-rx,160+ry); c.closePath(); }
+        c.strokeStyle=FARBE_MAGN; c.lineWidth=1.6; c.stroke();
+        if(runter){
+          pfeil(c,xR,160-ry-8,xR,160-ry+8,FARBE_MAGN,1.6,7);
+          pfeil(c,xR,160+ry-8,xR,160+ry+8,FARBE_MAGN,1.6,7);
+        } else {
+          pfeil(c,xR,160-ry+8,xR,160-ry-8,FARBE_MAGN,1.6,7);
+          pfeil(c,xR,160+ry+8,xR,160+ry-8,FARBE_MAGN,1.6,7);
+        }
+      }
+      c.font="italic 15px Calibri, sans-serif"; c.fillStyle=FARBE_MAGN; c.textAlign="left"; c.textBaseline="middle";
+      c.fillText("B", xR + 16 + (nB-1)*11 + 7, 118);
+      var d = iRel>0 ? 1 : -1, lang = 26 + 30*Math.abs(iRel), mo = (xL+xR)/2;
+      if(d>0) pfeil(c,mo-lang/2,yO,mo+lang/2,yO,FARBE_MAGN,4,12);
+      else pfeil(c,mo+lang/2,yO,mo-lang/2,yO,FARBE_MAGN,4,12);
+    } else {
+      c.font="15px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textAlign="center"; c.textBaseline="bottom";
+      c.fillText("i = 0", (xL+xR)/2, yO-10);
+    }
+
+    if(Z.R > 0){
+      c.fillStyle="#ffffff"; c.strokeStyle=FARBE_DRAHT; c.lineWidth=2.5;
+      c.fillRect(161,yU-12,70,24); c.strokeRect(161,yU-12,70,24);
+      c.font="15px Calibri, sans-serif"; c.fillStyle=FARBE_DRAHT; c.textAlign="center"; c.textBaseline="middle";
+      c.fillText("R", 196, yU);
+    }
+
+    c.font="italic 17px Calibri, sans-serif"; c.fillStyle=FARBE_DRAHT; c.textBaseline="middle";
+    c.textAlign="right"; c.fillText("C", xL-54, 160);
+    c.textAlign="left";  c.fillText("L", xR+9, 92);
+
+    c.font="15px Calibri, sans-serif"; c.textAlign="center"; c.textBaseline="middle";
+    c.fillStyle=FARBE_EL;
+    c.fillText("u = " + u.toFixed(2).replace(".",",") + " V", xL, 216);
+    c.fillStyle=FARBE_MAGN;
+    c.fillText("i = " + (i*1000).toFixed(0) + " mA", (xL+xR)/2, 40);
+
+    c.setTransform(1,0,0,1,0,0);
+  }
+
+  function zeichneFeder(){
+    var c = el("cFeder").getContext("2d");
+    c.setTransform(2,0,0,2,0,0);
+    c.clearRect(0,0,280,310);
+    var uRel = Math.max(-1,Math.min(1,(Z.q/Z.C)/Z.U0));
+    var vRel = Math.max(-1,Math.min(1, Z.i/iMax()));
+    var yM = 118, xGl = 152, A = 58, xW = 26;
+    var xm = xGl + uRel*A;
+
+    // Wand mit Schraffur und Unterlage
+    linie(c,xW,yM-62,xW,yM+34,FARBE_DRAHT,3);
+    for(var k=0;k<6;k++) linie(c,xW-11,yM-58+k*16,xW,yM-69+k*16,FARBE_GRAU,1.5);
+    linie(c,xW,yM+24,264,yM+24,FARBE_GRAU,1.5);
+
+    // Feder
+    var nF=12, xa=xW, xb=xm-21, dx=(xb-xa)/nF;
+    c.beginPath(); c.moveTo(xa,yM);
+    for(var f=0;f<nF;f++) c.lineTo(xa+dx*(f+0.5), yM + (f%2===0?-12:12));
+    c.lineTo(xb,yM);
+    c.strokeStyle=FARBE_DRAHT; c.lineWidth=2.2; c.stroke();
+
+    // Gleichgewichtslage
+    c.save(); c.setLineDash([5,5]);
+    linie(c,xGl,yM-70,xGl,yM+34,FARBE_GRAU,1.5);
+    c.restore();
+    c.font="12px Calibri, sans-serif"; c.textAlign="center"; c.textBaseline="top"; c.fillStyle=FARBE_GRAU;
+    c.fillText("Gleichgewichtslage", xGl, yM+38);
+    c.fillText("Feder entspannt, y = 0", xGl, yM+53);
+
+    // Koerper
+    c.fillStyle="#ffffff"; c.strokeStyle=FARBE_DRAHT; c.lineWidth=2.5;
+    c.fillRect(xm-21,yM-21,42,42); c.strokeRect(xm-21,yM-21,42,42);
+    c.font="italic 17px Calibri, sans-serif"; c.fillStyle=FARBE_DRAHT;
+    c.textAlign="center"; c.textBaseline="middle"; c.fillText("m", xm, yM);
+
+    // Auslenkung y
+    if(Math.abs(uRel)>0.04){
+      pfeil(c,xGl,yM-58,xm,yM-58,FARBE_EL,2.2,8);
+      c.font="italic 16px Calibri, sans-serif"; c.fillStyle=FARBE_EL; c.textBaseline="bottom";
+      c.fillText("y", (xGl+xm)/2, yM-62);
+    } else {
+      c.font="14px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textBaseline="bottom";
+      c.fillText("y = 0", xGl, yM-62);
+    }
+
+    // Geschwindigkeit v
+    if(Math.abs(vRel)>0.05){
+      var lv = 38*Math.abs(vRel), spitze = xm + (vRel>0 ? lv : -lv);
+      pfeil(c, xm, yM-34, spitze, yM-34, FARBE_MAGN, 2.2, 8);
+      c.font="italic 16px Calibri, sans-serif"; c.fillStyle=FARBE_MAGN; c.textBaseline="bottom";
+      c.fillText("v", spitze, yM-38);
+    } else {
+      c.font="14px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textBaseline="bottom";
+      c.fillText("v = 0", xm, yM-38);
+    }
+
+    c.font="14px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textAlign="center"; c.textBaseline="top";
+    c.fillText("y entspricht der Ladung q", xGl, 224);
+    c.fillText("v entspricht der Stromstärke i", xGl, 243);
+    c.fillText("m übernimmt die Rolle von L", xGl, 262);
+    c.fillText("D übernimmt die Rolle von 1/C", xGl, 281);
+    c.setTransform(1,0,0,1,0,0);
+  }
+
+  function phasenText(){
+    var Eel = Z.q*Z.q/(2*Z.C), Emagn = Z.L*Z.i*Z.i/2, Eg = Eel + Emagn;
+    var antEl = Eg > 0 ? Eel/Eg : 1;
+    var ladend = Z.q*Z.i > 0;
+    if(antEl > 0.93)
+      return "Umkehrpunkt: Der Kondensator ist maximal geladen, es fließt kein Strom. Die gesamte Energie steckt im elektrischen Feld. "
+           + "Beim Federschwinger entspricht das dem Umkehrpunkt, in dem der Körper einen Augenblick ruht.";
+    if(antEl < 0.07)
+      return "Der Kondensator ist entladen, die Stromstärke ist am größten. Die gesamte Energie steckt jetzt im Magnetfeld der Spule und hält den Strom aufrecht. "
+           + "Beim Federschwinger entspricht das dem Durchgang durch die Gleichgewichtslage mit größter Geschwindigkeit.";
+    if(ladend)
+      return "Das Magnetfeld baut sich ab und gibt seine Energie an den Kondensator zurück. Der Kondensator wird geladen, die Stromstärke nimmt ab. "
+           + "Beim Federschwinger läuft der Körper auf den Umkehrpunkt zu und wird langsamer.";
+    return "Der Kondensator entlädt sich. Die Stromstärke wächst, die Spule baut ihr Magnetfeld auf und speichert darin Energie. "
+         + "Beim Federschwinger läuft der Körper auf die Gleichgewichtslage zu und wird schneller.";
+  }
+
+  function aktualisiereAnzeige(){
+    var Eel = Z.q*Z.q/(2*Z.C), Emagn = Z.L*Z.i*Z.i/2;
+    var pEl = 100*Eel/E0(), pMagn = 100*Emagn/E0();
+    var pTh = Math.max(0, 100 - pEl - pMagn);
+    el("sEl").style.width = pEl.toFixed(1)+"%";
+    el("sMagn").style.width = pMagn.toFixed(1)+"%";
+    el("sTh").style.width = pTh.toFixed(1)+"%";
+    el("wEl").textContent = pEl.toFixed(0)+" %";
+    el("wMagn").textContent = pMagn.toFixed(0)+" %";
+    el("wTh").textContent = pTh.toFixed(0)+" %";
+    el("phasentext").textContent = phasenText();
+
+  }
+
+  function zeichneAlles(){ zeichneSchaltung(); zeichneFeder(); aktualisiereAnzeige(); }
+
+  var letzteZeit = null;
+  function schleife(zeit){
+    if(Z.laeuft){
+      if(letzteZeit === null) letzteZeit = zeit;
+      var dtReal = Math.min(0.05, (zeit - letzteZeit)/1000);
+      letzteZeit = zeit;
+      rechne(dtReal/Z.zeitlupe);
+    } else { letzteZeit = null; }
+    zeichneAlles();
+    requestAnimationFrame(schleife);
+  }
+
+  el("bStart").addEventListener("click", function(){
+    Z.laeuft = !Z.laeuft;
+    this.textContent = Z.laeuft ? "Pause" : "Start";
+  });
+  el("bReset").addEventListener("click", function(){
+    vonVorn(); Z.laeuft = false; el("bStart").textContent = "Start";
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".tempo"), function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll(".tempo"), function(x){ x.classList.remove("an"); });
+      b.classList.add("an");
+      Z.zeitlupe = parseFloat(b.getAttribute("data-z"));
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".sprung"), function(b){
+    b.addEventListener("click", function(){
+      setzePhase(parseInt(b.getAttribute("data-k"),10));
+      Z.laeuft = false; el("bStart").textContent = "Start";
+    });
+  });
+  el("sDaempfung").addEventListener("change", function(){
+    Z.R = this.checked ? 8 : 0;
+  });
+
+  vonVorn();
+  requestAnimationFrame(schleife);
+})();
+</script>
+</body>
+</html>
