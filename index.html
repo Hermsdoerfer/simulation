@@ -89,12 +89,10 @@
   <div class="feld">
     <h2>Schwingkreis</h2>
     <canvas id="cSchaltung" width="760" height="620"></canvas>
-    <div class="bildtext">Blau: Ladung und elektrisches Feld des Kondensators. Braun: Stromstärke und die Feldlinien des Magnetfeldes der Spule.</div>
   </div>
   <div class="feld">
     <h2>Waagerechter Federschwinger zum Vergleich</h2>
     <canvas id="cFeder" width="560" height="620"></canvas>
-    <div class="bildtext">Die Auslenkung y verhält sich wie die Ladung q, die Geschwindigkeit v wie die Stromstärke i. In der Gleichgewichtslage ist die Feder entspannt.</div>
   </div>
 </div>
 
@@ -275,12 +273,9 @@
       }
       c.font="italic 15px Calibri, sans-serif"; c.fillStyle=FARBE_MAGN; c.textAlign="left"; c.textBaseline="middle";
       c.fillText("B", xR + 16 + (nB-1)*11 + 7, 118);
-      var d = iRel>0 ? 1 : -1, lang = 26 + 30*Math.abs(iRel), mo = (xL+xR)/2;
-      if(d>0) pfeil(c,mo-lang/2,yO,mo+lang/2,yO,FARBE_MAGN,4,12);
-      else pfeil(c,mo+lang/2,yO,mo-lang/2,yO,FARBE_MAGN,4,12);
-    } else {
-      c.font="15px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textAlign="center"; c.textBaseline="bottom";
-      c.fillText("i = 0", (xL+xR)/2, yO-10);
+      var lang = 26 + 30*Math.abs(iRel), mo = (xL+xR)/2;
+      if(iRel>0) pfeil(c,mo+lang/2,yO,mo-lang/2,yO,FARBE_MAGN,4,12);
+      else pfeil(c,mo-lang/2,yO,mo+lang/2,yO,FARBE_MAGN,4,12);
     }
 
     if(Z.R > 0){
@@ -295,10 +290,11 @@
     c.textAlign="left";  c.fillText("L", xR+9, 92);
 
     c.font="15px Calibri, sans-serif"; c.textAlign="center"; c.textBaseline="middle";
+    c.fillStyle="#ffffff"; c.fillRect(xL-48, 205, 96, 22);
     c.fillStyle=FARBE_EL;
-    c.fillText("u = " + u.toFixed(2).replace(".",",") + " V", xL, 216);
+    c.fillText("u = " + (Math.abs(u) < 0.005 ? 0 : u).toFixed(2).replace(".",",") + " V", xL, 216);
     c.fillStyle=FARBE_MAGN;
-    c.fillText("i = " + (i*1000).toFixed(0) + " mA", (xL+xR)/2, 40);
+    c.fillText("i = " + Math.abs(i*1000).toFixed(0) + " mA", (xL+xR)/2, 40);
 
     c.setTransform(1,0,0,1,0,0);
   }
@@ -359,11 +355,6 @@
       c.fillText("v = 0", xm, yM-38);
     }
 
-    c.font="14px Calibri, sans-serif"; c.fillStyle=FARBE_GRAU; c.textAlign="center"; c.textBaseline="top";
-    c.fillText("y entspricht der Ladung q", xGl, 224);
-    c.fillText("v entspricht der Stromstärke i", xGl, 243);
-    c.fillText("m übernimmt die Rolle von L", xGl, 262);
-    c.fillText("D übernimmt die Rolle von 1/C", xGl, 281);
     c.setTransform(1,0,0,1,0,0);
   }
 
